@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Axios with HTML</title>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+  <h1>ตัวอย่างการใช้ Axios ใน HTML</h1>
+  <button onclick="fetchData()">ดึงข้อมูลผู้ใช้</button>
+  <button onclick="fetchData()">ดึงรูปภาพ</button>
+  <ul id="user-list"></ul>
+  <div id="gallery">
+    </div>
+
+  <script>
+    async function fetchData() {
+      const userList = document.getElementById('gallery');
+      userList.innerHTML = '<li>กำลังโหลดรูปภาพ...</li>';
+
+      try {
+        // ใช้ axios.get() เพื่อส่งคำขอ GET
+        // axios จะพร้อมใช้งานเป็น global variable หลังจากเราแทรก script CDN
+        const response = await axios.get('https://jsonplaceholder.typicode.com/users');
+        const users = response.data;
+
+        // ล้างรายการเก่า
+        userList.innerHTML = '';
+        
+        // แสดงข้อมูลผู้ใช้
+        users.forEach(user => {
+          const listItem = document.createElement('li');
+          listItem.textContent = user.name;
+          userList.appendChild(listItem);
+        });
+
+      } catch (error) {
+        console.error('เกิดข้อผิดพลาดในการดึงข้อมูล:', error.message);
+        userList.innerHTML = '<li>เกิดข้อผิดพลาดในการดึงข้อมูล</li>';
+      }
+    }
+  </script>
+
+</body>
+</html>

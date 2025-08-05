@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NASA Picture & Media Type Chart</title>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      background-color: #000;
+      color: #fff;
+      text-align: center;
+      padding: 20px;
+    }
+
+    img {
+      max-width: 90%;
+      border-radius: 12px;
+      margin-top: 20px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: auto;
+    }
+
+    canvas {
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>รูปจาก NASA</h1>
+    <h2 id="title">กำลังโหลด...</h2>
+    <img id="image" src="" alt="NASA Image of the Day" />
+    <p id="description"></p>
+
+    <h2>ประเภทสื่อในรอบ 7 วัน</h2>
+    <canvas id="mediaChart" width="400" height="200"></canvas>
+  </div>
+
+  <script>
+    const apiKey = 'OH4ApL97gdnxwhITnPLdwThvq8NvmpcjcOSGMZAT';
+
+  
+    function formatDate(date) {
+      return date.toISOString().slice(0, 10);
+    }
+
+
+    function fetchTodayImage() {
+      axios.get(`https://api.nasa.gov/planetary/apod?api_key=${apiKey}`)
+        .then(res => {
+          const data = res.data;
+          document.getElementById('title').textContent = data.title;
+          document.getElementById('image').src = data.url;
+          document.getElementById('description').textContent = data.explanation;
+        })
+        .catch(err => {
+          console.error(err);
+          document.getElementById('title').textContent = 'เกิดข้อผิดพลาดในการโหลดข้อมูล';
+        });
+    }
+
+
+    async function fetchMediaTypesChart() {
+      const today = new Date();
+      const pastDate = new Date();
+      pastDate.setDate(today.getDate() - 6); 
+
+      const startDate = formatDate(pastDate);
+      const endDate = formatDate(today);
+
+      try {
+        const res = await axios.get(`https://api.nasa.gov/planetary/apod?api_key=${apiKey}&start_date=${startDate}&end_date=${endDate}`);
+        const data = res.data;
+
+        const counts = { image: 0, video: 0, other: 0 };
+
+        data.forEach(item => {
+          if (item.media_type === 'image') counts.image++;
+          else if (item.media_type === 'video') counts.video++;
+          else counts.other++;
+        });
+
+        const ctx = document.getElementById('mediaChart').getContext('2d');
+        new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: ['ภาพ (image)', 'วิดีโอ (video)', 'อื่นๆ'],
+            datasets: [{
+              label: 'จำนวน',
+              data: [counts.image, counts.video, counts.other],
+              backgroundColor: ['#36A2EB', '#FF6384', '#FFCE56']
+            }]
+          },
+          options: {
+            responsive: true,
+            scales: {
+              y: { beginAtZero: true, stepSize: 1 }
+            },
+            plugins: { legend: { display: false } }
+          }
+        });
+
+      } catch (err) {
+        console.error('โหลดข้อมูลไม่สำเร็จ', err);
+      }
+    }
+
+
+    fetchTodayImage();
+    fetchMediaTypesChart();
+  </script>
+</body>
+</html>
